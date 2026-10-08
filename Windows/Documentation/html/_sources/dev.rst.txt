@@ -1,0 +1,50 @@
+dev package
+===========
+
+
+dev.cheb_utils module
+--------------------------
+
+.. automodule:: dev.cheb_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+dev.tt_cheb_utils module
+-------------------------------
+
+.. automodule:: dev.tt_cheb_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dev.rank_adaptive_C_interface module
+------------------------------------
+
+.. automodule:: dev.rank_adaptive_C_interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dev.alt_least_squares module
+-------------------------------
+
+.. automodule:: dev.alt_least_squares
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dev.rank_adaptive_algo module
+-------------------------------
+
+.. automodule:: dev.rank_adaptive_algo
+   :members:
+   :undoc-members:
+   :exclude-members: dimension,num_cheb_pts,intervals,cheb_pts_per_dimension,subgrid_entries,subgrid_entries_train,subgrid_entries_val,subgrid_vals,subgrid_vals_train,subgrid_vals_val,sorted_entries_train_ptrs,num_cheb_pts_ptr,trained_tt_tensor
+   :show-inheritance:
+
+
+
+
+

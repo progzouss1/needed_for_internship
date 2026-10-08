@@ -1,0 +1,402 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>mocaxextendpy.alt_least_squares &mdash; mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">mocaxextendpy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mocaxextendpy.alt_least_squares</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mocaxextendpy.alt_least_squares</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mocaxextendpy - Python implementation of Tensor Extension Algorithms</span>
+<span class="c1"># Copyright 2021 iRuiz Technologies, ltd.</span>
+<span class="c1"># See LICENSE.txt for details on the End User License Agreement.</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="k">import</span> <span class="n">LinAlgError</span>
+
+<span class="kn">from</span> <span class="nn">mocaxextendpy.mocax_extend_C_interface</span> <span class="k">import</span> <span class="n">hom_mat</span>
+
+<span class="kn">from</span> <span class="nn">scikit_tt.tensor_train</span> <span class="k">import</span> <span class="n">TT</span>
+
+
+<div class="viewcode-block" id="AlternatingLeastSquares"><a class="viewcode-back" href="../../mocaxextendpy.html#mocaxextendpy.alt_least_squares.AlternatingLeastSquares">[docs]</a><span class="k">class</span> <span class="nc">AlternatingLeastSquares</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        class that manages the routines associated to the Alternating Least Squares scheme used by the Completion Algorithm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AlternatingLeastSquares.alternating_least_squares"><a class="viewcode-back" href="../../mocaxextendpy.html#mocaxextendpy.alt_least_squares.AlternatingLeastSquares.alternating_least_squares">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">alternating_least_squares</span><span class="p">(</span><span class="n">tensor_entries_train</span><span class="p">,</span>
+                                  <span class="n">values_train</span><span class="p">,</span>
+                                  <span class="n">tensor</span><span class="p">,</span>
+                                  <span class="n">core_idx</span><span class="p">,</span>
+                                  <span class="n">num_cheb_pts_ptr</span><span class="p">,</span>
+                                  <span class="n">sorted_entries_ptr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implements alternating least squares scheme for the completion algorithm. Used to update each core of the TT tensor.</span>
+
+<span class="sd">        For details we refer to </span>
+
+<span class="sd">        Steinlechner, M. Riemannian optimization for high-dimensional tensor completion. SIAM J. Sci. Comput. 38.  (2016). S461–S484.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor_entries_train : numpy array 2D</span>
+<span class="sd">            Tensor subgrid entries used for training</span>
+
+<span class="sd">        values_train : numpy array 1D</span>
+<span class="sd">             Values on subgrid used for training</span>
+
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        core_idx : int</span>
+<span class="sd">             Indicates the core to be updated</span>
+
+<span class="sd">        num_cheb_pts_ptr: ctype array with ints</span>
+<span class="sd">            Number of chebyshev points per dimension</span>
+<span class="sd">            Computed before calling this function to save time</span>
+
+<span class="sd">        sorted_entries_ptr: dictionary of ctype array with ints</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mod_core : numpy array 4D</span>
+<span class="sd">             Core of TT tensor modified by ALS scheme</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tensor_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+        <span class="n">sorted_tensor_entries_train</span><span class="p">,</span> <span class="n">sorted_values_train</span><span class="p">,</span> <span class="n">__</span> <span class="o">=</span> <span class="n">AlternatingLeastSquares</span><span class="o">.</span><span class="n">sort_tensor_pts</span><span class="p">(</span>
+            <span class="n">tensor_entries_train</span><span class="p">,</span> <span class="n">values_train</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">)</span>
+
+        <span class="n">num_sorted_entries</span> <span class="o">=</span> <span class="n">sorted_tensor_entries_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1">## -- Ranks</span>
+        <span class="n">ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor_copy</span><span class="o">.</span><span class="n">ranks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intc</span><span class="p">)</span>
+        <span class="n">ranks_ptr</span> <span class="o">=</span> <span class="n">ranks</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span>
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">ranks</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+        <span class="c1">## -- Results</span>
+        <span class="n">result_size</span> <span class="o">=</span> <span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_sorted_entries</span> <span class="o">*</span> <span class="n">result_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="n">results_ptr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span>
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_sorted_entries</span> <span class="o">*</span> <span class="n">result_size</span><span class="p">)))</span>
+
+        <span class="n">dim</span> <span class="o">=</span> <span class="n">tensor_copy</span><span class="o">.</span><span class="n">order</span>
+
+        <span class="c1">## -- cores</span>
+        <span class="c1"># t0 = time.time()</span>
+        <span class="n">cores</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tensor_copy</span><span class="o">.</span><span class="n">cores</span><span class="p">)</span>
+        <span class="n">modified_cores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span>
+            <span class="n">core</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">core</span> <span class="ow">in</span> <span class="n">cores</span><span class="p">]</span>
+        <span class="n">cores_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">modified_cores</span><span class="p">)</span>
+
+        <span class="n">cores_ptr</span> <span class="o">=</span> <span class="n">cores_flat</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span>
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="n">cores_flat</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+        <span class="c1"># -- New way of obtaining hom matrix. Calling wrapper</span>
+        <span class="n">hom_mat</span><span class="p">(</span><span class="n">sorted_entries_ptr</span><span class="p">,</span> <span class="n">num_sorted_entries</span><span class="p">,</span> <span class="n">ranks_ptr</span><span class="p">,</span> <span class="n">num_cheb_pts_ptr</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">,</span>
+                <span class="n">cores_ptr</span><span class="p">,</span> <span class="n">results_ptr</span><span class="p">)</span>
+
+        <span class="n">hom_matrix_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ctypeslib</span><span class="o">.</span><span class="n">as_array</span><span class="p">(</span><span class="n">results_ptr</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+        <span class="n">hom_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">hom_matrix_flat</span><span class="p">,</span>
+                                <span class="p">(</span><span class="n">num_sorted_entries</span><span class="p">,</span> <span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">mod_core</span> <span class="o">=</span> <span class="n">AlternatingLeastSquares</span><span class="o">.</span><span class="n">__solve_lin_eqs</span><span class="p">(</span><span class="n">tensor_copy</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">,</span>
+                                                           <span class="n">sorted_tensor_entries_train</span><span class="p">,</span>
+                                                           <span class="n">sorted_values_train</span><span class="p">,</span> <span class="n">hom_matrix</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mod_core</span></div>
+
+<div class="viewcode-block" id="AlternatingLeastSquares.sort_tensor_pts"><a class="viewcode-back" href="../../mocaxextendpy.html#mocaxextendpy.alt_least_squares.AlternatingLeastSquares.sort_tensor_pts">[docs]</a>    <span class="k">def</span> <span class="nf">sort_tensor_pts</span><span class="p">(</span><span class="n">tensor_entries_train</span><span class="p">,</span> <span class="n">values_train</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Order tensor the subgrid of tensor used for training on the column corresponding to the core to update with ALS scheme. Used later for solving linear sys of equations</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor_entries_train : numpy array 2D</span>
+<span class="sd">            Tensor subgrid entries used for training</span>
+
+<span class="sd">        values_train : numpy array 1D</span>
+<span class="sd">             Values on subgrid used for training</span>
+
+<span class="sd">        core_idx : int</span>
+<span class="sd">             Indicates the core to be updated</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sorted_tensor_entries_train : numpy array 2D</span>
+<span class="sd">             The sorted subgrid (along column corresponding to core to updated) used for training</span>
+
+<span class="sd">        sorted_values_train : numpy array 1D</span>
+<span class="sd">             Sorted values corresponding to subgrid</span>
+
+<span class="sd">        idx_sort : int</span>
+<span class="sd">             Indices that give the sorting obtained</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get column to sort</span>
+        <span class="n">indices_core</span> <span class="o">=</span> <span class="n">tensor_entries_train</span><span class="p">[:,</span> <span class="n">core_idx</span><span class="p">]</span>
+        <span class="c1"># find indices that sort</span>
+        <span class="n">idx_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">indices_core</span><span class="p">)</span>
+
+        <span class="c1"># sort tensor points and tensor values using indices</span>
+        <span class="n">sorted_tensor_entries_train</span> <span class="o">=</span> <span class="n">tensor_entries_train</span><span class="p">[</span><span class="n">idx_sort</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">sorted_values_train</span> <span class="o">=</span> <span class="n">values_train</span><span class="p">[</span><span class="n">idx_sort</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">sorted_tensor_entries_train</span><span class="p">,</span> <span class="n">sorted_values_train</span><span class="p">,</span> <span class="n">idx_sort</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__solve_lin_eqs</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span>
+                        <span class="n">core_idx</span><span class="p">,</span>
+                        <span class="n">sorted_tensor_entries_train</span><span class="p">,</span>
+                        <span class="n">sorted_values_train</span><span class="p">,</span>
+                        <span class="n">hom_matrix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method named as solve_lin_eqs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        core_idx : int</span>
+<span class="sd">             Indicates the core to be updated</span>
+
+<span class="sd">        sorted_tensor_entries_train : numpy array 2D</span>
+<span class="sd">             The sorted subgrid used for training</span>
+
+<span class="sd">        sorted_values_train : numpy array 1D</span>
+<span class="sd">             Sorted values corresponding to subgrid</span>
+
+<span class="sd">        hom_matrix : numpy array 2D</span>
+<span class="sd">             Obtained by wrapper of C code</span>
+<span class="sd">             Used in system of linear equations</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res : numpy array 4D</span>
+<span class="sd">             Modified core</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#print(f&quot;Tensor inside of lin eqts solver: {tensor}&quot;)</span>
+        <span class="c1">#res = np.empty((tensor.cores[core_idx].shape))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">core_idx</span><span class="p">])</span>
+        <span class="c1"># slice_idx = 1</span>
+        <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">row_dims</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]):</span>
+            <span class="n">bools</span> <span class="o">=</span> <span class="n">sorted_tensor_entries_train</span><span class="p">[:,</span> <span class="n">core_idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">slice_idx</span>
+            <span class="n">range_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">bools</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">sys_lin_A</span> <span class="o">=</span> <span class="n">hom_matrix</span><span class="p">[</span><span class="n">range_slice</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">sys_lin_B</span> <span class="o">=</span> <span class="n">sorted_values_train</span><span class="p">[</span><span class="n">range_slice</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">sys_lin_A</span><span class="p">,</span> <span class="n">sys_lin_B</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">core_slice_size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span><span class="p">],</span> <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">core_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">core_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">core_slice_size</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[:,</span> <span class="n">slice_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">core_slice</span>
+
+        <span class="k">return</span> <span class="n">res</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021 iRuiz Technologies, ltd..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

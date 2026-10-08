@@ -1,0 +1,1829 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>rank_adaptive_algo &mdash; cheby_te - Python implementation of the Tensor Extension Algorithms for Chebyshev Tensors  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cheby_te - Python implementation of the Tensor Extension Algorithms for Chebyshev Tensors
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">cheby_te</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cheby_te - Python implementation of the Tensor Extension Algorithms for Chebyshev Tensors</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>rank_adaptive_algo</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rank_adaptive_algo</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mocaxpy - Python wrapper for the MoCaX Library</span>
+<span class="c1"># Copyright 2016-2018 iRuiz Technologies, ltd.</span>
+<span class="c1"># See LICENSE.txt for details on the End User License Agreement.</span>
+
+<span class="sd">&quot;&quot;&quot; Script to compute RankAdaptive Algorithm. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">multi_dot</span>
+<span class="kn">from</span> <span class="nn">scikit_tt.tensor_train</span> <span class="kn">import</span> <span class="n">TT</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+
+<span class="kn">from</span> <span class="nn">rank_adaptive_C_interface</span> <span class="kn">import</span> <span class="n">tensor_vals</span>
+<span class="kn">from</span> <span class="nn">tt_cheb_utils</span> <span class="kn">import</span> <span class="n">TTChebyshevUtils</span>
+<span class="kn">from</span> <span class="nn">cheb_utils</span> <span class="kn">import</span> <span class="n">cheb_pts_interval</span>
+<span class="kn">from</span> <span class="nn">alt_least_squares</span> <span class="kn">import</span> <span class="n">AlternatingLeastSquares</span>
+
+
+<div class="viewcode-block" id="RankAdaptiveAlgo"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo">[docs]</a><span class="k">class</span> <span class="nc">RankAdaptiveAlgo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class that manages the run of the  Rank Adaptive Algorithm</span>
+
+<span class="sd">        The class initialiser takes in the domain over which we build a Chebyshev Tensor in TT format and the number of Chebyshev points per dimension.</span>
+
+<span class="sd">        To build the Chebyshev Tensor in TT format we need values on a subgrid of the Chebyshev grid. The subgrid can be randly generated by the class instance or may be set by the user.</span>
+
+<span class="sd">        The subgrid must then be evaluated by the function to be approximated and stored within the class instance</span>
+
+<span class="sd">        Once the subgrid and values on them are stored within the class instance, a training and validation set can be generated</span>
+
+<span class="sd">        The Rank Adaptive algorithm can then be run. This generates the Chebyshev Tensor in TT format that approximates the function of interest.</span>
+
+<span class="sd">        For more details on the algorithms implemented here, we refer to</span>
+
+<span class="sd">        Steinlechner, M. Riemannian optimization for high-dimensional tensor completion. SIAM J. Sci. Comput. 38.  (2016). S461–S484.</span>
+
+<span class="sd">        Glau, K. Kressner, F. Statti, F. Low-rank tensor approximation for Chebyshev interpolation in parametric option pricing. (2019) https://arxiv.org/abs/1902.04367</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">num_cheb_pts</span><span class="p">,</span> <span class="n">intervals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dimension : int</span>
+<span class="sd">             Number of variables</span>
+
+<span class="sd">        num_cheb_pts : list</span>
+<span class="sd">             Number of Chebyshev points per dimension. Right now the number of Chebyshev points must be the same for all dimensions</span>
+
+<span class="sd">        intervals : list of lists of floats</span>
+<span class="sd">             List containing lists with two elements. Each list with two elements gives the range of a variable</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            dimension needs to be greater than 0</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            dimension must be greater than 0</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When length of num_cheb_pts does not match dimension</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">            Entries in num_cheb_pts must all be integers</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            All entries in num_cheb_pts must have the same value</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When intervals are not of length 2</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When number of intervals is not the same as dimension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span> <span class="o">=</span> <span class="n">num_cheb_pts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">=</span> <span class="n">intervals</span>  <span class="c1"># Only used for the generation of Cheb points per dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__cheb_pts_tensor</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">obj_repr</span> <span class="o">=</span> <span class="s2">&quot;Chebyshev Tensor in TT-format: &quot;</span> <span class="o">+</span> \
+                   <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Dimension: </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span> <span class="o">+</span> \
+                   <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Number of Chebyshev points per dimension: </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">)</span> <span class="o">+</span> \
+                   <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Tensor domain: </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj_repr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dimension </span>
+<span class="sd">             dimension of tensor</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dimension_return</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span>
+
+    <span class="nd">@dimension</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets dimension attribute</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dimension </span>
+<span class="sd">            dimension of tensor</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">            dimension needs to be an integer</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            dimension must be greater than 0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dimension</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter Dimension needs to be integer&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter Dimension needs to be greater than 0&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_cheb_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        num_cheb_pts :</span>
+<span class="sd">             returns num_cheb_pts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_cheb_pts_return</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_cheb_pts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">num_cheb_pts_return</span>
+
+    <span class="nd">@num_cheb_pts</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">num_cheb_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_cheb_pts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets number of  Chebyshev points per dimension</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_cheb_pts:</span>
+<span class="sd">             Number of Chebyshev points per dimension</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When length of num_cheb_pts does not match dimension</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">            Entries in num_cheb_pts must all be integers</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            All entries in num_cheb_pts must have the same value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_cheb_pts</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of num_cheb_pts should be same as attribute dimension &quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">num_cheb_pts</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;All the entries in num_cheb_pts must be of Integer type &quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">pts</span> <span class="o">!=</span> <span class="n">num_cheb_pts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">pts</span> <span class="ow">in</span> <span class="n">num_cheb_pts</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All the entries in num_cheb_pts must have the same value&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_cheb_pts</span> <span class="o">=</span> <span class="n">num_cheb_pts</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns list of intervals</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        intervals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intervals_return</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intervals</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">intervals_return</span>
+
+    <span class="nd">@intervals</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intervals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets list of intervals that define the domain of the Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        intervals</span>
+<span class="sd">             List of intervals that define the domain of the Chebyshev Tensor</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When intervals are not of length 2</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            When number of intervals is not the same as dimension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Interval entry should have length required and each entry has pair of values&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check if Length of Intervals are not equal to Dimension, Return Error</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of Range Interval should be same as dimension.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_intervals</span> <span class="o">=</span> <span class="n">intervals</span>
+
+    <span class="k">def</span> <span class="nf">__cheb_pts_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates Chebyshev points for every dimension and stores them within class instance.</span>
+<span class="sd">        It uses the number of Chebyshev points specified in attribute num_cheb_pts and the intervals specified in attribute intervals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cheb_pts_per_dimension</span> <span class="o">=</span> <span class="p">[</span><span class="n">cheb_pts_interval</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span>
+                                  <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span>
+                                  <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cheb_pts_per_dimension</span> <span class="o">=</span> <span class="n">cheb_pts_per_dimension</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cheb_pts_per_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the cheb points per dimension</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cheb_pts_per_dimension</span>
+<span class="sd">             </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cheb_pts_per_dim_return</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cheb_pts_per_dimension</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cheb_pts_per_dim_return</span>
+
+    <span class="nd">@cheb_pts_per_dimension</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">cheb_pts_per_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cheb_pts_per_dimension</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the Chebyshev points in each dimension</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cheb_pts_per_dimension: </span>
+<span class="sd">            list of list with cheb points per dimension</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cheb_pts_per_dimension</span> <span class="o">=</span> <span class="n">cheb_pts_per_dimension</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns tensor entries corresponding to the subgrid used to build the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_entries: numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute subgrid_entries does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_entries&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_entries does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_entries</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_entries</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the tensor entries corresponding to the subgrid used to build the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_entries: numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries</span> <span class="o">=</span> <span class="n">subgrid_entries</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It Returns tensor entries used during training of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_entries_train : numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">             Attribute subgrid_entries_train does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_entries_train&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries_train</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_entries_train does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_entries_train</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_entries_train</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets tensor entries used during training of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_entries_train : numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries_train</span> <span class="o">=</span> <span class="n">subgrid_entries_train</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries_val</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It returns tensor entries used during validation of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_entries_val : numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">             Attribute subgrid_entries_val does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_entries_val&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_entries_val does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_entries_val</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_entries_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_entries_val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets tensor entries used during validation of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_entries_val : numpy array 2D</span>
+<span class="sd">             Each row gives the entries of a subgrid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_entries_val</span> <span class="o">=</span> <span class="n">subgrid_entries_val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns values on subgrid used to build Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_vals : numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">             Attribute subgrid_vals does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_vals&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_vals does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_vals</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_vals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the values on the tensor entries corresponding to the subgrid used to build the Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_vals: numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals</span> <span class="o">=</span> <span class="n">subgrid_vals</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns values on subgrid used to for training the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_vals_train : numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries_train</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">             Attribute subgrid_vals_train does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_vals_train&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals_train</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_vals_train does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_vals_train</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_vals_train</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the values on subgrid used to for training the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_vals_train : numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries_train</span>
+<span class="sd">             </span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError :</span>
+<span class="sd">             If the nujmpy array is not 1D</span>
+
+<span class="sd">        ValueError :</span>
+<span class="sd">             If the numpy array has nan values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrid_vals_train</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_train must be 1D array.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">subgrid_vals_train</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_train must not be empty.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals_train</span> <span class="o">=</span> <span class="n">subgrid_vals_train</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals_val</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns values on subgrid used to for validation in the training of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_vals_val : numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries_val</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError </span>
+<span class="sd">             Attribute subgrid_vals_train does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_subgrid_vals_val&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute subgrid_vals_val does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@subgrid_vals_val</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">subgrid_vals_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_vals_val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the values on subgrid used to for validation in the training of the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_vals_val : numpy array 1D</span>
+<span class="sd">             The value in the i-th entry corresponds to the value of the subgrid in the i-th row of subgrid_entries_val</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError :</span>
+<span class="sd">             If the nujmpy array is not 1D</span>
+
+<span class="sd">        ValueError :</span>
+<span class="sd">             If the numpy array has nan values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrid_vals_val</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_val must be 1D array.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">subgrid_vals_val</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_val must not be empty.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subgrid_vals_val</span> <span class="o">=</span> <span class="n">subgrid_vals_val</span>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.subgrid_by_number"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.subgrid_by_number">[docs]</a>    <span class="k">def</span> <span class="nf">subgrid_by_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly sample n grid points. This creates the subgrid used to build the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Subgrid is randomly generated. Subgrid points may be repeated in this sampling. Repeats are removed. Therefore, user should be aware that the number of subgrid points returned may be lower than the number requested..</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">             value greater than 0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_points_unique : numpy array</span>
+<span class="sd">             2  dimensional numpy array containing the subrid of the tensor for which we need values to run the rank adaptive algorithm</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             Parameter n must be an integer</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">             Parameter n must be greater than 1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Subrid must have at least two points. Only </span><span class="si">{}</span><span class="s2"> were asked for&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># if n and n &gt; 1:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The parameter must be greater than 1&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">subgrid_points_unique</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sample_points_calculation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">subgrid_points_unique</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.subgrid_by_percent"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.subgrid_by_percent">[docs]</a>    <span class="k">def</span> <span class="nf">subgrid_by_percent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly sample a subgrid of the full Chebyshev grid by specifying a percentage p. This creates the subgrid used to build the Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Subgrid is randomly generated. Subgrid points may be repeated in this sampling. Repeats are removed. Therefore, user should be aware that the number of subgrid points returned may be lower than the number requested..</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p : float</span>
+<span class="sd">             percentage between 0 and 1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_points_unique : numpy array</span>
+<span class="sd">             2  dimensional numpy array containing the subrid of the tensor for which we need values to run the rank adaptive algorithm</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Parameter p must be between zero and one</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter p must be between 0 and 1&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tensor_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tensor_size</span><span class="p">()</span>
+            <span class="n">percentage</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="n">tensor_size</span><span class="p">))</span>
+            <span class="n">subgrid_points_unique</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sample_points_calculation</span><span class="p">(</span><span class="n">percentage</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">subgrid_points_unique</span></div>
+
+    <span class="k">def</span> <span class="nf">__sample_points_calculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method does the work for subgrid_by_number and subgrid_by_percent.</span>
+<span class="sd">        It does the random sampling and removes repeats</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">             value greater than 0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_points_unique : numpy array</span>
+<span class="sd">             2  dimensional numpy array containing the subrid of the tensor for which we need values to run the rank adaptive algorithm</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subgrid_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">subgrid_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">pt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cheb_pts_per_dimension</span><span class="p">):</span>
+            <span class="n">rand_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pt</span><span class="p">)),</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">subgrid_entries</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">rand_entries</span>
+            <span class="n">subgrid_points</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">rand_entries</span><span class="p">]</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">subgrid_entries</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">subgrid_entries_unique</span> <span class="o">=</span> <span class="n">subgrid_entries</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">indices</span><span class="p">)]</span>
+        <span class="n">subgrid_points_unique</span> <span class="o">=</span> <span class="n">subgrid_points</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">indices</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span> <span class="o">=</span> <span class="n">subgrid_entries_unique</span>
+
+        <span class="k">return</span> <span class="n">subgrid_points_unique</span>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.set_subgrid"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.set_subgrid">[docs]</a>    <span class="k">def</span> <span class="nf">set_subgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method lets the user manually set subgrid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid_points : numpy array</span>
+<span class="sd">             array of random cheb_pts. Note that these are not the entries representing the subgrid but the actual values.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : </span>
+<span class="sd">             subgrid_points must be 2D numpy array</span>
+
+<span class="sd">        ValueError : NaN check</span>
+<span class="sd">             subgrid_points must not contain NaN values</span>
+
+<span class="sd">        ValueError : size mismatch</span>
+<span class="sd">             subgrid_points must have as many columns as dimension specified for tensor (dimension is an attribute of class intance)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subgrid_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">subgrid_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">subgrid_points</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">subgrid_points</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">subgrid_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">:</span>
+                    <span class="n">subgrid_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">subgrid_points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">pts</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subgrid_points</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
+                            <span class="n">cheb_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cheb_pts_per_dimension</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cheb_pts_per_dimension</span><span class="p">[</span><span class="n">n</span><span class="p">]):</span>
+                                <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cheb_pts</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+                                <span class="n">subgrid_entries</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Entry </span><span class="si">{}</span><span class="s2"> at location </span><span class="si">{}</span><span class="s2"> is not present in cheb &quot;</span>
+                                                 <span class="s2">&quot;points.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span> <span class="o">=</span> <span class="n">subgrid_entries</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_points columns must be equal to dimension.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_points must not contain NaN values.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_points should be 2 Dimensional Numpy Array.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.set_subgrid_values"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.set_subgrid_values">[docs]</a>    <span class="k">def</span> <span class="nf">set_subgrid_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the values corresponding the subgrid within the class instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : numpy array 1D</span>
+<span class="sd">             values for train and validation.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : dimension of values parameter</span>
+<span class="sd">             values parameter should be a 1D numpy array</span>
+
+<span class="sd">        AttributeError :</span>
+<span class="sd">             subgrid_entries must already exist within the class for this method to be called</span>
+
+<span class="sd">        ValueError : length check</span>
+<span class="sd">             Length of values must be the same as length of subgrid_entries</span>
+
+<span class="sd">        ValueError : NaN check</span>
+<span class="sd">             Values param musst not contain NaN values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Values must not contain NaN values.&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Length of values: </span><span class="si">{}</span><span class="s2">, must be equal to rows of subgrid_entries: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                    <span class="s2">&quot;To set values of a subgrid, the attribute subgrid_entries must exist already. First, call subgrid_by_number, subgrid_by_percent or set_subgrid, and then set corresponding values using set_subgrid_values&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The parameter values must be a 1D numpy array&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.gen_train_val_data"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.gen_train_val_data">[docs]</a>    <span class="k">def</span> <span class="nf">gen_train_val_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function splits subgrid_entries and subgrid values into training and validation,If no split percentage is passed, function assumes 0.8</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        percentage : float</span>
+<span class="sd">             percentage value for splitting tensor values.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : outside of range</span>
+<span class="sd">             Percentage should be between 0 and 1.</span>
+
+<span class="sd">        AttributeError :</span>
+<span class="sd">             There is no data to generate training and validating data sets.First, call subgrid_by_number, subgrid_by_percent or set_subgrid, and set corresponding values using set_subgrid_values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_vals&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries&quot;</span><span class="p">):</span>
+            <span class="n">percentage</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;percentage&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">percentage</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+
+                <span class="n">split_pct</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">percentage</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_val</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span><span class="p">[:</span><span class="n">split_pct</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span><span class="p">[</span><span class="n">split_pct</span><span class="p">:,</span> <span class="p">:]</span>
+
+                <span class="n">split_val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">percentage</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals</span><span class="p">[:</span><span class="n">split_val</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals</span><span class="p">[</span><span class="n">split_val</span><span class="p">:]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Percentage:</span><span class="si">{}</span><span class="s2"> should be between 0 and 1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">percentage</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;There is no data to generate training and validating data sets. First, call subgrid_by_number, subgrid_by_percent or set_subgrid, and set corresponding values using set_subgrid_values&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.get_tensor_size"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.get_tensor_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_tensor_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the size of the full tensor grid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tensor_grid_size : int</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute num_cheb_pts does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;num_cheb_pts&quot;</span><span class="p">):</span>
+            <span class="n">tensor_grid_size</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">((</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tensor_grid_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Attribute num_cheb_pts does not exist&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.get_subgrid_size"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.get_subgrid_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_subgrid_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the size of the subgrid used to generate Chebyshev Tensor in TT format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subgrid_size : int</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute subgrid_entries does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries&quot;</span><span class="p">):</span>
+            <span class="n">subgrid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries</span>
+            <span class="n">subgrid_size</span> <span class="o">=</span> <span class="n">subgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">subgrid_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Attribute subgrid_entries does not exist&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.get_training_set_size"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.get_training_set_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_training_set_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of data points in the training set</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        train_size : int</span>
+<span class="sd">             It returns ten_train_size.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute subgrid_entries_train does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries_train&quot;</span><span class="p">):</span>
+            <span class="n">train_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">train_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Attribute subgrid_entries_train does not exist&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.get_validating_set_size"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.get_validating_set_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_validating_set_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of data points in the validation set</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        validation_size : int</span>
+<span class="sd">             It returns ten_validation_size</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute subgrid_vals_val does not exist&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries_val&quot;</span><span class="p">):</span>
+            <span class="n">validation_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">validation_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Attribute subgrid_entries_val does not exist.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.serialize"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serializes the instance of class</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             Filename should be a string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## Delete ctype attributes if they exist. Otherwise we cannot serialise</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_sorted_entries_train_ptrs&quot;</span><span class="p">):</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_sorted_entries_train_ptrs&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_num_cheb_pts_ptr&quot;</span><span class="p">):</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_num_cheb_pts_ptr&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Filename </span><span class="si">{}</span><span class="s2"> should be a string: &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.deserialize"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.deserialize">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deserializes the content within the file named filename. It returns an object of type RankAdaptiveAlgo.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        de_obj : instance</span>
+<span class="sd">             Instance of class.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             Filename  should be string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+                <span class="n">des_obj</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+                <span class="c1"># print(de_obj.__dict__)</span>
+                <span class="k">return</span> <span class="n">des_obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Filename </span><span class="si">{}</span><span class="s2"> should be string&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__gen_sorted_subgrid_train_ptr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates gen_subgrid_train_ptr used in alternating least squares scheme</span>
+<span class="sd">        sorted_entries_train_ptrs  is a dictonary of ctype arrays with integers</span>
+<span class="sd">        It is important to generated it before the als routine is run to speed the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorted_entries_train_ptrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">core_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="n">sorted_tensor_entries_train</span><span class="p">,</span> <span class="n">sorted_values_train</span><span class="p">,</span> <span class="n">__</span> <span class="o">=</span> <span class="n">AlternatingLeastSquares</span><span class="o">.</span><span class="n">sort_tensor_pts</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">)</span>
+
+            <span class="c1">## -- Indices</span>
+            <span class="n">sorted_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sorted_tensor_entries_train</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intc</span><span class="p">)</span>
+            <span class="n">sorted_entries_ptr</span> <span class="o">=</span> <span class="n">sorted_entries</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">sorted_entries</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_entries_train_ptrs</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_entries_ptr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sorted_entries_train_ptrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns sorted_entries_train_ptrs</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sorted_entries_ptrs : dict</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute sorted_entries_ptrs does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_sorted_entries_train_ptrs&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_entries_train_ptrs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute sorted_entries_train_ptrs does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@sorted_entries_train_ptrs</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">sorted_entries_train_ptrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sorted_entries_train_ptrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets sorted_entries_train_ptrs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sorted_entries_train_ptrs : dictionary</span>
+<span class="sd">             it sets sorted_entries_train_ptrs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_entries_train_ptrs</span> <span class="o">=</span> <span class="n">sorted_entries_train_ptrs</span>
+
+    <span class="k">def</span> <span class="nf">__gen_num_cheb_pts_ptr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates num_cheb_pts_ptr used in alternating least squares scheme</span>
+<span class="sd">        num_cheb_pts_ptr is a ctype array with integers</span>
+<span class="sd">        Genertaing num_cheb_pts_ptr before running the ALS routine is done to speed the code up</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">real_num_cheb_pts</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">]</span>
+        <span class="n">num_cheb_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">real_num_cheb_pts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts_ptr</span> <span class="o">=</span> <span class="n">num_cheb_pts</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span>
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">num_cheb_pts</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_cheb_pts_ptr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        num_cheb_pts_ptr : ctype array with integeres</span>
+<span class="sd">             </span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">             Attribute num_cheb_pts_ptr does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_num_cheb_pts_ptr&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_cheb_pts_ptr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute num_cheb_pts_ptr does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@num_cheb_pts_ptr</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">num_cheb_pts_ptr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_cheb_pts_ptr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_cheb_pts_ptr : ctype array with integeres</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_cheb_pts_ptr</span> <span class="o">=</span> <span class="n">num_cheb_pts_ptr</span>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.run_completion_algo"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.run_completion_algo">[docs]</a>    <span class="k">def</span> <span class="nf">run_completion_algo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method runs the completion algorithm based an the Alternating Least Squares.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor : TT tensor</span>
+<span class="sd">            To be modified by the algorithm</span>
+
+<span class="sd">        **kwargs : dictionary with algorithm parameters</span>
+<span class="sd">            tolerance: float</span>
+<span class="sd">                Accuracy of approximation we want to reach (relative error)</span>
+<span class="sd">                Default set to 1e^-3</span>
+<span class="sd">            rel_tolerance: float</span>
+<span class="sd">                If the algorithm improves the accuracy less than re_tolerance, the algo stops</span>
+<span class="sd">                Default set to 1e^-8</span>
+<span class="sd">            max_iters: int</span>
+<span class="sd">                Number of iterations for completion algo based on ALS scheme</span>
+<span class="sd">            print_progress: boolean value</span>
+<span class="sd">                If true it prints the progress of the algorithm</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tensor : TT tensor</span>
+<span class="sd">            it is a tt tensor (sciki_tt).</span>
+
+<span class="sd">        train_error : numpy array 1D</span>
+<span class="sd">             Array with training errors </span>
+
+<span class="sd">        validation_error : numpy array 1D</span>
+<span class="sd">             Array with validation errors </span>
+
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : </span>
+<span class="sd">             tolerance, rel_tolerance, max_iters have to be greater than 0</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             max_iters has to be an integer</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             print_progress has to be a boolean value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tolerance</span><span class="p">,</span> <span class="n">rel_tolerance</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">print_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__param_check_run_completion</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">train_error</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_iters</span><span class="p">)</span>
+        <span class="n">validation_error</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_iters</span><span class="p">)</span>
+
+        <span class="n">norm_subgrid_entries_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">)</span>
+        <span class="n">norm_subgrid_entries_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_val</span><span class="p">)</span>
+
+        <span class="c1"># if tensor.ranks[5] == 8:</span>
+        <span class="c1">#     print(f&quot;Shape core before orth inside completion algo: {tensor.cores[4].shape}\n&quot;)</span>
+
+        <span class="n">tensor</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">orthogonalize</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># if tensor.ranks[5] == 8:</span>
+        <span class="c1">#     print(f&quot;Shape core after orth inside completion algo: {tensor.cores[4].shape}\n&quot;)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+
+            <span class="c1"># print(&#39;Forward sweep&#39;, &#39;\n&#39;)</span>
+            <span class="c1"># t0 = time.time()</span>
+            <span class="k">for</span> <span class="n">core_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># print(core_idx)</span>
+                <span class="n">core_mod</span> <span class="o">=</span> <span class="n">AlternatingLeastSquares</span><span class="o">.</span><span class="n">alternating_least_squares</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts_ptr</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sorted_entries_train_ptrs</span><span class="p">[</span><span class="n">core_idx</span><span class="p">])</span>
+
+                <span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">core_mod</span>  <span class="c1"># place core_mod inside of tensor</span>
+                <span class="n">tensor</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">orth_left</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">)</span>
+
+            <span class="c1">## -- Error collection for forward sweep</span>
+            <span class="n">err_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tensor_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+            <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">err_train</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm_subgrid_entries_train</span>
+
+            <span class="n">err_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tensor_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_val</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_val</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+            <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">err_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm_subgrid_entries_val</span>
+
+            <span class="c1">## -- Error check to see if we exit algorithm</span>
+            <span class="k">if</span> <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Converged at iteration: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Train error: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Validation error </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Leaving algo</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">train_error</span> <span class="o">=</span> <span class="n">train_error</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">validation_error</span> <span class="o">=</span> <span class="n">validation_error</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="c1">## -- Stagnation check to see if we exit algorithm</span>
+                <span class="n">rel_tol</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">rel_tol_test</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> \
+                               <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">rel_tol</span> <span class="o">&lt;</span> <span class="n">rel_tolerance</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rel_tol_test</span> <span class="o">&lt;</span> <span class="n">rel_tolerance</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">At iteration: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Relative error change training: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rel_tol</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Relative error change testing: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rel_tol_test</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Leaving algo</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="n">train_error</span> <span class="o">=</span> <span class="n">train_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">validation_error</span> <span class="o">=</span> <span class="n">validation_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span>
+
+            <span class="c1"># print(&#39;Backward sweep&#39;, &#39;\n&#39;)</span>
+            <span class="k">for</span> <span class="n">core_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># print(core_idx)</span>
+
+                <span class="n">core_mod</span> <span class="o">=</span> <span class="n">AlternatingLeastSquares</span><span class="o">.</span><span class="n">alternating_least_squares</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts_ptr</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sorted_entries_train_ptrs</span><span class="p">[</span><span class="n">core_idx</span><span class="p">])</span>
+
+                <span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">core_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">core_mod</span>  <span class="c1"># place core_mod inside of tensor</span>
+                <span class="n">tensor</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">orth_right</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">core_idx</span><span class="p">)</span>
+
+            <span class="c1">## -- Error collection for backward sweep</span>
+            <span class="n">error_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tensor_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_train</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_train</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+            <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">error_train</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm_subgrid_entries_train</span>
+
+            <span class="n">error_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tensor_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrid_entries_val</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subgrid_vals_val</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+            <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">error_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm_subgrid_entries_val</span>
+
+            <span class="c1">## -- Error check to see if we exit algorithm</span>
+            <span class="k">if</span> <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Converged at iteration: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Train error: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Validation error </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">]))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Leaving algo</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">train_error</span> <span class="o">=</span> <span class="n">train_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">validation_error</span> <span class="o">=</span> <span class="n">validation_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1">## -- Stagnation check to see if we exit algorithm</span>
+                <span class="n">rel_tol</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">train_error</span><span class="p">[(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> \
+                          <span class="n">train_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">rel_tol_test</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">validation_error</span><span class="p">[(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> \
+                               <span class="n">validation_error</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">rel_tol</span> <span class="o">&lt;</span> <span class="n">rel_tolerance</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rel_tol_test</span> <span class="o">&lt;</span> <span class="n">rel_tolerance</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">At iteration: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Relative error change training: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rel_tol</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Relative error change testing: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rel_tol_test</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Leaving algo</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="n">train_error</span> <span class="o">=</span> <span class="n">train_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                    <span class="n">validation_error</span> <span class="o">=</span> <span class="n">validation_error</span><span class="p">[:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span>
+
+        <span class="k">return</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__param_check_run_completion</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the parameters passed to the completion algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs : algorithm parameters</span>
+<span class="sd">            tolerance: float</span>
+<span class="sd">                Accuracy of approximation we want to reach (relative error)</span>
+<span class="sd">                Default set to 1e^-3</span>
+<span class="sd">            rel_tolerance: float</span>
+<span class="sd">                If the algorithm improves the accuracy less than re_tolerance, the algo stops</span>
+<span class="sd">                Default set to 1e^-8</span>
+<span class="sd">            max_iters: int</span>
+<span class="sd">                Number of iterations for completion algo based on ALS scheme</span>
+<span class="sd">                Default set to 5</span>
+<span class="sd">            print_progress: boolean value</span>
+<span class="sd">                If true it prints the progress of the algorithm</span>
+<span class="sd">                Default set to false</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tolerance: float greter than 0</span>
+<span class="sd">        rel_tolerance: float greater than 0</span>
+<span class="sd">        max_iters: int greater than 0</span>
+<span class="sd">        print_progress: boolean value</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : </span>
+<span class="sd">             tolerance, rel_tolerance, max_iters have to be greater than 0</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             max_iters has to be an integer</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             print_progress has to be a boolean value</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tolerance&#39;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Tolerance parameters should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">rel_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rel_tolerance&#39;</span><span class="p">,</span> <span class="mf">0.00000001</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel_tolerance</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Relative tolerance parameters should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">max_iters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_iters&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_iters</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Maximum number of iterations should be an integer.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_iters</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Maximum number of iterations should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">print_progress</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;print_progress&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">print_progress</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;print_progress parameter should be a boolean value&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">rel_tolerance</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">print_progress</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__increase_rank</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increases the rank of the tensor at the core given by index idx</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        idx : int</span>
+<span class="sd">             Core for which we increase rank</span>
+<span class="sd">             Index is integer and less than the dimension of the tensor.</span>
+
+<span class="sd">        epsilon : float</span>
+<span class="sd">             Used to randomly sample values and extend rank of core</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : outside interval</span>
+<span class="sd">             The index passed is outside the accepted range. It must be greater than zero and less than the dimension of the tensor</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">tensor</span><span class="o">.</span><span class="n">order</span><span class="p">:</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">row_dims</span>
+            <span class="n">tensor_new</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+            <span class="n">tensor_new</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+                                                        <span class="n">epsilon</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+                                                                                  <span class="n">n</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span>
+                                                                                  <span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">tensor_new</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                                                    <span class="n">epsilon</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span>
+                                                                              <span class="n">r</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">tensor_new</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shape of old core at idx - 1: </span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shape of new core at idx - 1: </span><span class="si">{</span><span class="n">tensor_new</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shape of old core at idx: </span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shape of new core at idx: </span><span class="si">{</span><span class="n">tensor_new</span><span class="o">.</span><span class="n">cores</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">tensor_new</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The index passed </span><span class="si">{}</span><span class="s2"> is outside the accepted range. It must be greater than zero and less than the dimension of the tensor&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">idx</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__tensor_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subgrid</span><span class="p">,</span> <span class="n">subgrid_vals</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the error between the values of the tensor on the sub grid passed, and the values given by subgrid_vals. This is used to compare the error of the Chebyshev Tensor in TT on the subgrid used to build it and the real values on the subgrid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subgrid : numpy array</span>
+<span class="sd">             A 2 Dimensional Numpy Array that contains the points of the subgrid to be evaluated.</span>
+
+<span class="sd">        subgrid_vals : numpy array</span>
+<span class="sd">             A 1 Dimensional Numpy Array that contains values of the function on the subgrid</span>
+
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res : float</span>
+<span class="sd">            The error between the values on the subgrid obtaine with the tensor and the actual values of the function on the subgrid</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : size mismatch</span>
+<span class="sd">             subgrid_vals must be 1 Dimensional array and &quot;subgrid must be 2 Dimensional array.</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            Length of subgrid_vals must be equal to the number of rows in subgrid</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            subgrid_vals should not contain NaN values</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             Type of tensor must be TT.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">subgrid_vals</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">subgrid_vals</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">subgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">subgrid_vals</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">TT</span><span class="p">):</span>
+
+                        <span class="c1">## -- Indices</span>
+                        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">subgrid</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intc</span><span class="p">)</span>
+                        <span class="n">indices_ptr</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">indices</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+                        <span class="n">num_indices</span> <span class="o">=</span> <span class="n">subgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="c1">## -- Results</span>
+                        <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">num_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+                        <span class="n">results_ptr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span>
+                            <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="n">num_indices</span><span class="p">))</span>
+
+                        <span class="c1">## -- Ranks</span>
+                        <span class="n">ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intc</span><span class="p">)</span>
+                        <span class="n">ranks_ptr</span> <span class="o">=</span> <span class="n">ranks</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">ranks</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+                        <span class="c1">## -- cores</span>
+                        <span class="n">cores</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cores</span>
+                        <span class="n">modified_cores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span>
+                            <span class="n">core</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">core</span> <span class="ow">in</span> <span class="n">cores</span><span class="p">]</span>
+                        <span class="n">cores_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">modified_cores</span><span class="p">)</span>
+
+                        <span class="n">cores_ptr</span> <span class="o">=</span> <span class="n">cores_flat</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span>
+                            <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="n">cores_flat</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+                        <span class="n">tensor_vals</span><span class="p">(</span><span class="n">indices_ptr</span><span class="p">,</span> <span class="n">num_indices</span><span class="p">,</span> <span class="n">ranks_ptr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts_ptr</span><span class="p">,</span> <span class="n">tensor</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">cores_ptr</span><span class="p">,</span>
+                                   <span class="n">results_ptr</span><span class="p">)</span>
+
+                        <span class="n">tensor_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ctypeslib</span><span class="o">.</span><span class="n">as_array</span><span class="p">(</span><span class="n">results_ptr</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+                        <span class="c1"># tensor_values = [res for res in results_ptr.contents]</span>
+                        <span class="c1"># t1 = time.time()</span>
+                        <span class="c1"># time_fast = t1 - t0</span>
+                        <span class="c1"># print(f&quot;Time fast version: {time_fast:.5f}&quot;)</span>
+
+                        <span class="c1">## -- Old python function(slower)</span>
+                        <span class="c1"># t0 = time.time()</span>
+                        <span class="c1"># tensor_vals_slow = RankAdaptiveAlgo.tensor_vals(tensor, subgrid)</span>
+                        <span class="c1"># t1 = time.time()</span>
+                        <span class="c1"># time_slow = t1 - t0</span>
+                        <span class="c1"># print(f&quot;Time slow version: {time_slow:.5f}&quot;)</span>
+
+                        <span class="c1"># print(f&quot;Times faster: {time_slow / time_fast:.2f}&quot;)</span>
+
+                        <span class="c1">## Test outputs are the same</span>
+                        <span class="c1"># print(&quot;Equal result?: &quot;, tensor_vals_slow == pytest.approx(tensor_values, rel=0.0000000001))</span>
+
+                        <span class="n">res</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">subgrid_vals</span> <span class="o">-</span>
+                                                              <span class="n">tensor_values</span><span class="p">)))</span>
+                        <span class="k">return</span> <span class="n">res</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Type of tensor must be TT.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of Rows in subgrid and elements in subgrid_vals must be equal.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals must not contain NaN values.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals must be 1 Dimensional array.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.run_rank_adaptive_algo"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.run_rank_adaptive_algo">[docs]</a>    <span class="k">def</span> <span class="nf">run_rank_adaptive_algo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method runs the rank adaptive algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tensor : TT</span>
+<span class="sd">             Chebyshev Tensor in TT format.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that params that have been passed have the right type</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries_train&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_vals_train&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_entries_val&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;subgrid_vals_val&quot;</span><span class="p">):</span>
+                        <span class="n">tolerance</span><span class="p">,</span> <span class="n">rel_tolerance</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">max_rank</span><span class="p">,</span> <span class="n">print_progress</span><span class="p">,</span> <span class="n">max_rounds</span> <span class="o">=</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__param_check_rank_adaptive</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                        <span class="c1"># Generate some of the pointers needed for the function wrappers of C code</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__gen_num_cheb_pts_ptr</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__gen_sorted_subgrid_train_ptr</span><span class="p">()</span>
+
+                        <span class="c1"># Randomly generate a tt tensor</span>
+                        <span class="n">cores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                                 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)]</span>
+                        <span class="n">tensor_init</span> <span class="o">=</span> <span class="n">TT</span><span class="p">(</span><span class="n">cores</span><span class="p">)</span>
+                        <span class="n">tensor</span><span class="p">,</span> <span class="n">train_error</span><span class="p">,</span> <span class="n">validation_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_completion_algo</span><span class="p">(</span><span class="n">tensor_init</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="n">validation_error_old</span> <span class="o">=</span> <span class="n">validation_error</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+                        <span class="n">curr_max_rank</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">curr_round</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">max_rounds</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+
+                        <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_________________________________________&quot;</span><span class="p">)</span>
+                        <span class="k">while</span> <span class="n">curr_max_rank</span> <span class="o">&lt;</span> <span class="n">max_rank</span> <span class="ow">and</span> <span class="n">curr_round</span> <span class="o">&lt;</span> <span class="n">max_rounds</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+                                <span class="c1">## -- Increase rank</span>
+                                <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Current tensor: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tensor</span><span class="p">))</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Trying increase rank </span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2"> to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                                                           <span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+                                <span class="n">tensor_new</span> <span class="o">=</span> <span class="n">RankAdaptiveAlgo</span><span class="o">.</span><span class="n">__increase_rank</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+
+                                <span class="c1"># if print_progress:</span>
+                                <span class="c1">#     print(&quot;\nNew tensor: {}&quot;.format(tensor_new))</span>
+
+
+                                <span class="n">tensor_new</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">orthogonalize</span><span class="p">(</span><span class="n">tensor_new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+                                <span class="c1"># if i == 5 and tensor_new.ranks[5] == 8:</span>
+                                <span class="c1">#     print(f&quot;After ortho idx: {tensor_new.cores[i].shape}&quot;)</span>
+                                <span class="c1">#     print(f&quot;After ortho idx - 1: {tensor_new.cores[i-1].shape}\n&quot;)</span>
+
+                                <span class="n">tensor_new</span><span class="p">,</span> <span class="n">train_error_new</span><span class="p">,</span> <span class="n">validation_error_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_completion_algo</span><span class="p">(</span>
+                                    <span class="n">tensor_new</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                                <span class="c1">## -- Print message to keep track of error</span>
+                                <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Current train cost: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Current validation cost: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+                                <span class="k">if</span> <span class="p">(</span><span class="n">train_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span>
+                                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">APPROX ERROR TRAIN BELOW THRESHOLD: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;APPROX ERROR VALIDATION BELOW THRESHOLD: </span><span class="si">{:.3e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                            <span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_________________________________________&quot;</span><span class="p">)</span>
+                                    <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor_new</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">trained_tt_tensor</span> <span class="o">=</span> <span class="n">tensor</span>
+                                    <span class="k">return</span> <span class="n">tensor</span>
+
+                                <span class="n">rel_progress</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">validation_error_old</span><span class="p">)</span> <span class="o">/</span> <span class="n">validation_error_old</span>
+                                <span class="n">progress</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">validation_error_old</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error improvement of </span><span class="si">{:.3e}</span><span class="s2"> in rank increase attempt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">progress</span><span class="p">))</span>
+
+                                <span class="k">if</span> <span class="n">progress</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">FAILED with completion algo. Reverting to old tensor&quot;</span><span class="p">)</span>
+                                    <span class="n">curr_round</span> <span class="o">=</span> <span class="n">curr_round</span> <span class="o">+</span> <span class="mi">1</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Current round: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">curr_round</span><span class="p">))</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_________________________________________&quot;</span><span class="p">)</span>
+
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">SUCCEEDED with completion algo. Updating to new tensor&quot;</span><span class="p">)</span>
+                                    <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor_new</span>
+                                    <span class="n">validation_error_old</span> <span class="o">=</span> <span class="n">validation_error_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                                    <span class="n">curr_max_rank</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">ranks</span><span class="p">)</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Current max rank </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">curr_max_rank</span><span class="p">))</span>
+                                    <span class="n">curr_round</span> <span class="o">=</span> <span class="mi">0</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_________________________________________&quot;</span><span class="p">)</span>
+
+                                <span class="k">if</span> <span class="n">curr_round</span> <span class="o">&gt;=</span> <span class="n">max_rounds</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span>
+                                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">EXIT RANK ADAPTIVE AS CURR_ROUND </span><span class="si">{}</span><span class="s2"> EXCEEDED MAX LOCKS </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                <span class="n">curr_round</span><span class="p">,</span> <span class="n">max_rounds</span><span class="p">))</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">trained_tt_tensor</span> <span class="o">=</span> <span class="n">tensor</span>
+                                    <span class="k">return</span> <span class="n">tensor</span>
+                                <span class="k">if</span> <span class="n">curr_max_rank</span> <span class="o">&gt;=</span> <span class="n">max_rank</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">print_progress</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span>
+                                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">EXIT RANK ADAPTIVE AS MAX RANK </span><span class="si">{}</span><span class="s2"> EXCEEDED MAXIMUM RANK CHOSEN IN PARAMS </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                <span class="n">curr_max_rank</span><span class="p">,</span> <span class="n">max_rank</span><span class="p">))</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">trained_tt_tensor</span> <span class="o">=</span> <span class="n">tensor</span>
+                                    <span class="k">return</span> <span class="n">tensor</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_val attribute are needed but have not been generated&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Subgrid_entries_val attribute are needed but have not been generated&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Subgrid_vals_train attribute are needed but have not been generated&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Subgrid_entries_train attribute are needed but have not been generated&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trained_tt_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trained_tt_tensor : TT tensor</span>
+<span class="sd">             It returns trained TT tensor trained_tt_tensor.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError </span>
+<span class="sd">             Attribute trained_tt_tensor does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_trained_tt_tensor&quot;</span><span class="p">):</span>
+            <span class="n">trained_tt_tensor_return</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trained_tt_tensor</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">trained_tt_tensor_return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Attribute trained_tt_tensor does not exist&#39;</span><span class="p">)</span>
+
+    <span class="nd">@trained_tt_tensor</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">trained_tt_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trained_tt_tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trained_tt_tensor</span>
+<span class="sd">             it sets trained_tt_tensor.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trained_tt_tensor</span> <span class="o">=</span> <span class="n">trained_tt_tensor</span>
+
+    <span class="k">def</span> <span class="nf">__param_check_rank_adaptive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the parameters passed to the rank adaptive algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs : algorithm parameters</span>
+<span class="sd">            tolerance: float</span>
+<span class="sd">                Accuracy of approximation we want to reach (relative error)</span>
+<span class="sd">                Default set to 1e^-3</span>
+<span class="sd">            rel_tolerance: float</span>
+<span class="sd">                If the algorithm improves the accuracy less than re_tolerance, the algo stops</span>
+<span class="sd">                Default set to 1e^-8</span>
+<span class="sd">            max_iters: int</span>
+<span class="sd">                Number of iterations for completion algo based on ALS scheme</span>
+<span class="sd">                Default set to 50</span>
+<span class="sd">            print_progress: boolean value</span>
+<span class="sd">                If true it prints the progress of the algorithm</span>
+<span class="sd">                Default set to false</span>
+<span class="sd">            max_rank: int</span>
+<span class="sd">                Maximum rank of core that we let the rank adaptive algorithm reach</span>
+<span class="sd">                Default set to the minimum number of Cheb points per dimension</span>
+<span class="sd">            max_rounds: int</span>
+<span class="sd">                Maximum number of times the rank is increased for every core without improvement</span>
+<span class="sd">                Default set to 5</span>
+<span class="sd">            epsilon: float</span>
+<span class="sd">                Used when randomly generating values to extend rank of cores</span>
+<span class="sd">                Default set to 1e-8</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tolerance: float greter than 0</span>
+<span class="sd">        rel_tolerance: float greater than 0</span>
+<span class="sd">        max_iters: int greater than 0</span>
+<span class="sd">        print_progress: boolean value</span>
+<span class="sd">        max_rank: int grater than 0</span>
+<span class="sd">        max_rounds: int greater than 0</span>
+<span class="sd">        epsilon: float greater than 0</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : </span>
+<span class="sd">             tolerance, rel_tolerance, max_iters. max_rank, max_rounds, epsilon have to be greater than 0</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             max_iters has to be an integer and print_progress a boolean value</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tolerance&#39;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Tolerance parameters should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">rel_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rel_tolerance&#39;</span><span class="p">,</span> <span class="mf">0.00000001</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel_tolerance</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Relative tolerance parameters should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">max_iters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_iters&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_iters</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Maximum number of iterations should be an integer.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_iters</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Maximum number of iterations should be greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="n">print_progress</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;print_progress&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">print_progress</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;print_progress parameter should be a boolean value&quot;</span><span class="p">)</span>
+
+        <span class="n">max_rank</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_rank&#39;</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_rank</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Maximum rank parameter should be an integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_rank</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Maximum rank parameter should be greater than one&quot;</span><span class="p">)</span>
+
+        <span class="n">max_rounds</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_rounds&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_rounds</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;max_rounds parameter should be a integer value&quot;</span><span class="p">)</span>
+
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;epsilon&#39;</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">epsilon</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Epsilon parameter should greater than zero&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">rel_tolerance</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">max_rank</span><span class="p">,</span> <span class="n">print_progress</span><span class="p">,</span> <span class="n">max_rounds</span>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.cheb_tensor_eval"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.cheb_tensor_eval">[docs]</a>    <span class="k">def</span> <span class="nf">cheb_tensor_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_tensor</span><span class="p">,</span> <span class="n">scaled_pt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method evaluates the Chebyshev Tensor in TT format on a point that is within a hyper-rectangle defined by intervals [-1,1]. This method is used by cheb_tensor_evals at the evaluation of each point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        c_tensor : TT</span>
+<span class="sd">             Tensor in TT format.</span>
+
+<span class="sd">        scaled_pt : numpy array</span>
+<span class="sd">             It is 1D numpy array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            Evaluation value of Chebyshev tensor in TT format on scaled_pt</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : length mismatch</span>
+<span class="sd">             Length of scaled_pt must be equal to dimension.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scaled_pt</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">:</span>
+            <span class="n">cheb_tensor</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">gen_cheb_tensor</span><span class="p">(</span><span class="n">scaled_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                                                           <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">tt_tensor_inner_prod</span><span class="p">(</span><span class="n">c_tensor</span><span class="p">,</span> <span class="n">cheb_tensor</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of scaled_pt </span><span class="si">{}</span><span class="s2"> must be equal to dimension </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scaled_pt</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RankAdaptiveAlgo.cheb_tensor_evals"><a class="viewcode-back" href="../cheby_te.html#rank_adaptive_algo.RankAdaptiveAlgo.cheb_tensor_evals">[docs]</a>    <span class="k">def</span> <span class="nf">cheb_tensor_evals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">pts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method evalutes the Chebyshev Tensor in TT format on a set of points given by pts.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tensor :</span>
+<span class="sd">            Chebyshev Tensor in TT format.</span>
+<span class="sd">        pts : numpy array</span>
+<span class="sd">            A 2 Dimensional Numpy Array that contains the points to be evaluated by the Chebyshev Tensor in TT format. Each row represents a point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vals : numpy array</span>
+<span class="sd">             1D numpy array with the values of the Chebyshev Tensor in TT format on pts.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError : outside Domain</span>
+<span class="sd">             If a point to evaluate is outside Domain.</span>
+<span class="sd">        ValueError : size mismatch</span>
+<span class="sd">             If the Parameter pts size is not 2 Dimensional Numpy Array.</span>
+<span class="sd">        TypeError : type mismatch</span>
+<span class="sd">             If the tensor type is not same as type TT.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">TT</span><span class="p">):</span>
+
+            <span class="n">c_tensor</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">c_tensor</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cheb_pts</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pts</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+
+                <span class="n">num_pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">num_pts</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_pts</span><span class="p">):</span>
+                    <span class="n">pt</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                    <span class="n">pt_scaled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+                        <span class="n">pt_1d</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">pt_1d</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">pt_1d</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Point </span><span class="si">{}</span><span class="s2"> outside the&quot;</span>
+                                            <span class="s2">&quot; domain given by [</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pt_1d</span><span class="p">,</span>
+                                                                               <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                                               <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">pt_scaled</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">TTChebyshevUtils</span><span class="o">.</span><span class="n">domain_scaler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                                          <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">pt_1d</span><span class="p">)</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cheb_tensor_eval</span><span class="p">(</span><span class="n">c_tensor</span><span class="p">,</span> <span class="n">pt_scaled</span><span class="p">)</span>
+                    <span class="n">vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="k">return</span> <span class="n">vals</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter pts must be 2 Dimensional Numpy Array.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The tensor must be of type TT.&quot;</span><span class="p">)</span></div></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2016-2018 iRuiz Technologies, ltd..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

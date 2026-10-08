@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Installation &mdash; mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="API reference" href="mocaxextendpy.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">mocaxextendpy</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mocaxextendpy.html">API reference</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">mocaxextendpy</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p><strong>Tensor Extension Algorithms in Python</strong></p>
+<p>The library contained in mocaxextendpy was written in Python but contains a couple of python wrappers for code written in C. These wrappers depend on shared libraries (both in Linux and Windows). The C files are provided, alongside the Python package, so that the user can create the required shared libraries. Next, we give instructions of how to do this.</p>
+<p>First, Python should be installed on your computer. The mocaxextendpy package was developed in Python 3.7, so we recommend using this version, but previous Python versions should work too. A more detailed list of packages, along with their corresponding versions, that were part of the Python installation with which mocaxextendpy was developed, is given in requirements.txt, found within the Library folders for both Linux and Windows versions. Note that many of these packages are not directly needed to use mocaxextendpy.</p>
+<p>It is sometimes convenient to work in a virtual environment. This, however, is not a requirement. To create a virtual environment you can use virtualenv. To install it run</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">virtualenv</span></code></p>
+</div></blockquote>
+<p>in your terminal (linux or windows). Choose a root directory for your project and run the following command</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">virtualenv</span> <span class="pre">env</span></code></p>
+</div></blockquote>
+<p>This creates a new folder <cite>env</cite> in your project or root directory. Next activate it with the following command:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">env/bin/active</span></code></p>
+</div></blockquote>
+<p>You can install all dependencies specified in requirements.txt with</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p>
+</div></blockquote>
+<p><strong>Dependencies that must be installed:</strong></p>
+<p>Other than the standard packages one normally uses with Python in numerical computing (such as numpy), the following are essential to use mocaxextendpy</p>
+<p><strong>Scikit-TT</strong>.</p>
+<p>To install it simply enter:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/PGelss/scikit_tt</span></code></p>
+</div></blockquote>
+<p><strong>CBLAS</strong></p>
+<p>The user has two options regarding the shared libraries needed run the python wrappers in mocaxextendpy. Either use the once we provide (libtensorvals.so and libhommat.so), or generate them using the C files found in /Library/c_files. For both options, BLAS must be installed.**</p>
+<p><strong>To install CBLAS in linux:</strong></p>
+<p><em>1 Open terminal and run the following command:</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libatlas-base-dev</span></code></p>
+</div></blockquote>
+<p>This installs the cblas dependencies needed to both create .so files and to to run the python wrappers the package mocaxextendpy depends on.</p>
+<p><strong>To install in Windows:</strong></p>
+<p>For Windows we provide the shared library gslcblas.dll. This is needed to generate the Python wrappers (if user chooses to) that mocaxextendpy depends on and to run the python wrappers the in mocaxextendpy.</p>
+<p><strong>Generating shared libraries</strong></p>
+<p>We provide pre-built shared libraries that can be found in the folders shared_libs within Linux/Library or Windows/Library. These may or may not work in your system. These libraries should be placed in a folder that is within the environment variables of your Python installation (to run the wrappers).</p>
+<p>Alternatively, the user may choose to generate the shared libraries using the C files provided in the folders c_files found in Linux/Library and Windows/Library. The description of how to generate the shared libraries that the wrappers in mocaxextendpy rely on is given next.</p>
+<p><strong>In Linux:</strong></p>
+<p><em>1. Create shared library for tensorVals.c by running in the folder c_files the following command:</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-fPIC</span> <span class="pre">-shared</span> <span class="pre">-o</span> <span class="pre">libtensorvals.so</span> <span class="pre">tensorVals.c</span> <span class="pre">-lcblas</span></code></p>
+</div></blockquote>
+<p><em>This creates the shared library libtensorvals.so needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. In Linux that is normally /usr/lib/ or if the Python installation is done through Anaconda, then it can also be in /anaconda/lib</em></p>
+<p><em>2. Create shared library for homMat.c by running in the folder where homMat.c is:</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-fPIC</span> <span class="pre">-shared</span> <span class="pre">-o</span> <span class="pre">libhommat.so</span> <span class="pre">homMat.c</span> <span class="pre">-lcblas</span></code></p>
+</div></blockquote>
+<p><em>This creates the shared library libhommat.so needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. In Linux that is normally /usr/local/lib/ or if the Python installation is done through Anaconda, then it can also be in /anaconda/lib</em></p>
+<p><strong>In Windows:</strong></p>
+<p><em>1. Create shared library for tensorVals.c by running within the folder where tensorVals.C is:</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-shared</span> <span class="pre">-o</span> <span class="pre">tensorvals.dll</span> <span class="pre">tensorVals.c</span> <span class="pre">-I.</span> <span class="pre">-L.</span> <span class="pre">-lgslcblas</span></code></p>
+</div></blockquote>
+<p><em>This creates the shared library tensorvals.dll needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder that is part of the environment variables of your Python installation. For exampple, if your Python installation was done with Anaconda, one can place the shared libraries in Anaconda3Librarybin</em></p>
+<p><em>2. Create shared library for homMat.c by running within the folder where homMat.C is:</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-shared</span> <span class="pre">-o</span> <span class="pre">hommat.dll</span> <span class="pre">homMat.c</span> <span class="pre">-I.</span> <span class="pre">-L.</span> <span class="pre">-lgslcblas</span></code></p>
+</div></blockquote>
+<p><em>This creates the shared library hommat.dll needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. For example, if Python has been installed with Anaconda, one can place the shared libraries in Anaconda3Librarybin</em></p>
+<p><strong>Installation of the mocaxextendpy package:</strong></p>
+<p>Once the Python wrappers have been generated and placed in a folder within Python’s environment variables, the package mocaxextendpy must be in a folder within Python’s system paths. For example, if Python has been installed with Anaconda, one can place the shared libraries in Anaconda3Libsite-packages*</p>
+<p><strong>Authors:</strong></p>
+<p>Mughda Kolte
+Jayesh Chavan
+Mariano Zeron</p>
+<p><strong>License:</strong></p>
+<p>mocaxextendpy - Python implemntation of Tensor Extension Algorithms for Chebyshev Tensors</p>
+<p>Copyright 2021 iRuiz Technologies, ltd.</p>
+<p>See LICENSE.txt for details on the End User License Agreement.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="mocaxextendpy.html" class="btn btn-neutral float-left" title="API reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021 iRuiz Technologies, ltd..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

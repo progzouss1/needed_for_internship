@@ -1,0 +1,112 @@
+Installation_demo
+=================
+
+**Tensor Extension Algorithms in Python**
+
+The library contained in mocaxextendpy was written in Python but contains a couple of python wrappers for code written in C. These wrappers depend on shared libraries (both in Linux and Windows). The C files are provided, alongside the Python package, so that the user can create the required shared libraries. Next, we give instructions of how to do this.
+
+First, Python should be installed on your computer. The mocaxextendpy package was developed in Python 3.7, so we recommend using this version, but previous Python versions should work too. A more detailed list of packages, along with their corresponding versions, that were part of the Python installation with which mocaxextendpy was developed, is given in requirements.txt, found within the Library folders for both Linux and Windows versions. Note that many of these packages are not directly needed to use mocaxextendpy.
+
+It is sometimes convenient to work in a virtual environment. This, however, is not a requirement. To create a virtual environment you can use virtualenv. To install it run
+
+    ``pip install virtualenv``
+
+in your terminal (linux or windows). Choose a root directory for your project and run the following command
+
+    ``virtualenv env``
+
+This creates a new folder `env` in your project or root directory. Next activate it with the following command:
+
+    ``source env/bin/active``
+
+
+You can install all dependencies specified in requirements.txt with
+
+
+    ``pip install -r requirements.txt``
+
+
+
+**Dependencies that must be installed:**
+
+Other than the standard packages one normally uses with Python in numerical computing (such as numpy), the following are essential to use mocaxextendpy
+
+**Scikit-TT**.
+
+To install it simply enter:
+
+    ``pip install git+https://github.com/PGelss/scikit_tt``
+
+
+**CBLAS. The user has two options regarding the shared libraries needed run the python wrappers in mocaxextendpy. Either use the once we provide (libtensorvals.so and libhommat.so), or generate them using the C files found in /Library/c_files. For both options, BLAS must be installed.**
+
+**To install CBLAS in linux:**
+
+*1 Open terminal and run the following command:*
+
+    ``sudo apt-get install libatlas-base-dev``
+
+This installs the cblas dependencies needed to both create .so files and to to run the python wrappers the package mocaxextendpy depends on.
+
+
+**To install in Windows:**
+
+For Windows we provide the shared library gslcblas.dll. This is needed to generate the Python wrappers (if user chooses to) that mocaxextendpy depends on and to run the python wrappers the in mocaxextendpy.
+
+
+**Generating shared libraries**
+
+We provide pre-built shared libraries that can be found in the folders shared_libs within Linux/Library or Windows/Library. These may or may not work in your system. These libraries should be placed in a folder that is within the environment variables of your Python installation (to run the wrappers).
+
+Alternatively, the user may choose to generate the shared libraries using the C files provided in the folders c_files found in Linux/Library and Windows/Library. The description of how to generate the shared libraries that the wrappers in mocaxextendpy rely on is given next.
+
+**In Linux:**
+
+*1. Create shared library for tensorVals.c by running in the folder c_files the following command:*
+
+    ``gcc -fPIC -shared -o libtensorvals.so tensorVals.c -lcblas``
+
+*This creates the shared library libtensorvals.so needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. In Linux that is normally /usr/lib/ or if the Python installation is done through Anaconda, then it can also be in /anaconda/lib*
+
+*2. Create shared library for homMat.c by running in the folder where homMat.c is:*
+
+    ``gcc -fPIC -shared -o libhommat.so homMat.c -lcblas``
+
+*This creates the shared library libhommat.so needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. In Linux that is normally /usr/local/lib/ or if the Python installation is done through Anaconda, then it can also be in /anaconda/lib*
+
+
+**In Windows:**
+
+*1. Create shared library for tensorVals.c by running within the folder where tensorVals.C is:*
+
+    ``gcc -shared -o tensorvals.dll tensorVals.c -I. -L. -lgslcblas``
+
+*This creates the shared library tensorvals.dll needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder that is part of the environment variables of your Python installation. For exampple, if your Python installation was done with Anaconda, one can place the shared libraries in Anaconda3\Library\bin*
+
+*2. Create shared library for homMat.c by running within the folder where homMat.C is:*
+
+    ``gcc -shared -o hommat.dll homMat.c -I. -L. -lgslcblas``
+
+*This creates the shared library hommat.dll needed by the python wrapper found in rank_adaptive_C_interface.py. The shared library must be placed in a folder where Python can reach it. For example, if Python has been installed with Anaconda, one can place the shared libraries in Anaconda3\Library\bin*
+
+
+**Installation of the mocaxextendpy package:**
+
+Once the Python wrappers have been generated and placed in a folder within Python's environment variables, the package mocaxextendpy must be in a folder within Python's system paths. For example, if Python has been installed with Anaconda, one can place the shared libraries in Anaconda3\Lib\site-packages*
+
+
+
+**Authors:**
+
+Mughda Kolte
+Jayesh Chavan
+Mariano Zeron
+
+
+**License:**
+
+mocaxextendpy - Python implemntation of Tensor Extension Algorithms for Chebyshev Tensors
+
+Copyright 2021 iRuiz Technologies, ltd.
+
+See LICENSE.txt for details on the End User License Agreement.

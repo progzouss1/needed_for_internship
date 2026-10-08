@@ -1,0 +1,1040 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>API reference &mdash; mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="readme.html" />
+    <link rel="prev" title="mocaxextendpy" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">mocaxextendpy</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">API reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-mocaxextendpy.mocax_extend">mocax_extend module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-mocaxextendpy.alt_least_squares">alt_least_squares module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-mocaxextendpy.mocax_extend_C_interface">mocax_extend_C_interface module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-mocaxextendpy.tt_cheb_utils">tt_cheb_utils module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-mocaxextendpy.cheb_utils">cheb_utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="readme.html">Installation</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mocaxextendpy - Implementation of the Tensor Extension Algorithms for Chebyshev Tensors</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">mocaxextendpy</a> &raquo;</li>
+        
+      <li>API reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/mocaxextendpy.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-mocaxextendpy.mocax_extend">
+<span id="mocax-extend-module"></span><h2>mocax_extend module<a class="headerlink" href="#module-mocaxextendpy.mocax_extend" title="Permalink to this headline">¶</a></h2>
+<p>Script to compute RankAdaptive Algorithm.</p>
+<dl class="class">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend">
+<em class="property">class </em><code class="sig-prename descclassname">mocaxextendpy.mocax_extend.</code><code class="sig-name descname">MocaxExtend</code><span class="sig-paren">(</span><em class="sig-param">dimension</em>, <em class="sig-param">num_cheb_pts</em>, <em class="sig-param">intervals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that manages the run of the  Rank Adaptive Algorithm</p>
+<p>The class initialiser takes in the domain over which we build a Chebyshev Tensor in TT format and the number of Chebyshev points per dimension.</p>
+<p>To build the Chebyshev Tensor in TT format we need values on a subgrid of the Chebyshev grid. The subgrid can be randly generated by the class instance or may be set by the user.</p>
+<p>The subgrid must then be evaluated by the function to be approximated and stored within the class instance</p>
+<p>Once the subgrid and values on them are stored within the class instance, a training and validation set can be generated</p>
+<p>The Rank Adaptive algorithm can then be run. This generates the Chebyshev Tensor in TT format that approximates the function of interest.</p>
+<p>For more details on the algorithms implemented here, we refer to</p>
+<p>Steinlechner, M. Riemannian optimization for high-dimensional tensor completion. SIAM J. Sci. Comput. 38.  (2016). S461–S484.</p>
+<p>Glau, K. Kressner, F. Statti, F. Low-rank tensor approximation for Chebyshev interpolation in parametric option pricing. (2019) <a class="reference external" href="https://arxiv.org/abs/1902.04367">https://arxiv.org/abs/1902.04367</a></p>
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.cheb_tensor_eval">
+<code class="sig-name descname">cheb_tensor_eval</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">c_tensor</em>, <em class="sig-param">scaled_pt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.cheb_tensor_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.cheb_tensor_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method evaluates the Chebyshev Tensor in TT format on a point that is within a hyper-rectangle defined by intervals [-1,1]. This method is used by cheb_tensor_evals at the evaluation of each point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>c_tensor</strong><span class="classifier">TT</span></dt><dd><p>Tensor in TT format.</p>
+</dd>
+<dt><strong>scaled_pt</strong><span class="classifier">numpy array</span></dt><dd><p>It is 1D numpy array.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>val</strong><span class="classifier">float</span></dt><dd><p>Evaluation value of Chebyshev tensor in TT format on scaled_pt</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">length mismatch</span></dt><dd><p>Length of scaled_pt must be equal to dimension.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.cheb_tensor_evals">
+<code class="sig-name descname">cheb_tensor_evals</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">pts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.cheb_tensor_evals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.cheb_tensor_evals" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method evalutes the Chebyshev Tensor in TT format on a set of points given by pts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor :</strong></dt><dd><p>Chebyshev Tensor in TT format.</p>
+</dd>
+<dt><strong>pts</strong><span class="classifier">numpy array</span></dt><dd><p>A 2 Dimensional Numpy Array that contains the points to be evaluated by the Chebyshev Tensor in TT format. Each row represents a point.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>vals</strong><span class="classifier">numpy array</span></dt><dd><p>1D numpy array with the values of the Chebyshev Tensor in TT format on pts.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">outside Domain</span></dt><dd><p>If a point to evaluate is outside Domain.</p>
+</dd>
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>If the Parameter pts size is not 2 Dimensional Numpy Array.</p>
+</dd>
+<dt><strong>AttributeError</strong><span class="classifier">trained_tt_tensor is not inside the object</span></dt><dd><p>tt tensor needed to evaluate points</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.deserialize">
+<em class="property">static </em><code class="sig-name descname">deserialize</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.deserialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.deserialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserializes the content within the file named filename. It returns an object of type RankAdaptiveAlgo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">string</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>de_obj</strong><span class="classifier">instance</span></dt><dd><p>Instance of class.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Filename  should be string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.gen_train_val_data">
+<code class="sig-name descname">gen_train_val_data</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.gen_train_val_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.gen_train_val_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function splits subgrid_entries and subgrid values into training and validation,If no split percentage is passed, function assumes 0.8</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>percentage</strong><span class="classifier">float</span></dt><dd><p>percentage value for splitting tensor values.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">outside of range</span></dt><dd><p>Percentage should be between 0 and 1.</p>
+</dd>
+<dt>AttributeError :</dt><dd><p>There is no data to generate training and validating data sets.First, call subgrid_by_number, subgrid_by_percent or set_subgrid, and set corresponding values using set_subgrid_values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.get_subgrid_size">
+<code class="sig-name descname">get_subgrid_size</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.get_subgrid_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.get_subgrid_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the size of the subgrid used to generate Chebyshev Tensor in TT format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subgrid_size</strong><span class="classifier">int</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>AttributeError :</dt><dd><p>Attribute subgrid_entries does not exist.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.get_tensor_size">
+<code class="sig-name descname">get_tensor_size</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.get_tensor_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.get_tensor_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the size of the full tensor grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor_grid_size</strong><span class="classifier">int</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>AttributeError :</dt><dd><p>Attribute num_cheb_pts does not exist.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.get_training_set_size">
+<code class="sig-name descname">get_training_set_size</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.get_training_set_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.get_training_set_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of data points in the training set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>train_size</strong><span class="classifier">int</span></dt><dd><p>It returns ten_train_size.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>AttributeError :</dt><dd><p>Attribute subgrid_entries_train does not exist.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.get_validating_set_size">
+<code class="sig-name descname">get_validating_set_size</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.get_validating_set_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.get_validating_set_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of data points in the validation set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>validation_size</strong><span class="classifier">int</span></dt><dd><p>It returns ten_validation_size</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>AttributeError :</dt><dd><p>Attribute subgrid_vals_val does not exist”</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.run_completion_algo">
+<code class="sig-name descname">run_completion_algo</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">tensor</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.run_completion_algo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.run_completion_algo" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method runs the completion algorithm based an the Alternating Least Squares.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT tensor</span></dt><dd><p>To be modified by the algorithm</p>
+</dd>
+<dt><strong>**kwargs</strong><span class="classifier">dictionary with algorithm parameters</span></dt><dd><dl class="simple">
+<dt>tolerance: float</dt><dd><p>Accuracy of approximation we want to reach (relative error)
+Default set to 1e^-3</p>
+</dd>
+<dt>rel_tolerance: float</dt><dd><p>If the algorithm improves the accuracy less than re_tolerance, the algo stops
+Default set to 1e^-8</p>
+</dd>
+<dt>max_iters: int</dt><dd><p>Number of iterations for completion algo based on ALS scheme</p>
+</dd>
+<dt>print_progress: boolean value</dt><dd><p>If true it prints the progress of the algorithm</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT tensor</span></dt><dd><p>it is a tt tensor (sciki_tt).</p>
+</dd>
+<dt><strong>train_error</strong><span class="classifier">numpy array 1D</span></dt><dd><p>Array with training errors</p>
+</dd>
+<dt><strong>validation_error</strong><span class="classifier">numpy array 1D</span></dt><dd><p>Array with validation errors</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError :</dt><dd><p>tolerance, rel_tolerance, max_iters have to be greater than 0</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>max_iters has to be an integer</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>print_progress has to be a boolean value</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.run_rank_adaptive_algo">
+<code class="sig-name descname">run_rank_adaptive_algo</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.run_rank_adaptive_algo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.run_rank_adaptive_algo" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method runs the rank adaptive algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong><span class="classifier">algorithm parameters</span></dt><dd><dl class="simple">
+<dt>tolerance: float</dt><dd><p>Accuracy of approximation we want to reach (relative error)
+Default set to 1e^-3</p>
+</dd>
+<dt>rel_tolerance: float</dt><dd><p>If the algorithm improves the accuracy less than re_tolerance, the algo stops
+Default set to 1e^-8</p>
+</dd>
+<dt>max_iters: int</dt><dd><p>Number of iterations for completion algo based on ALS scheme
+Default set to 50</p>
+</dd>
+<dt>print_progress: boolean value</dt><dd><p>If true it prints the progress of the algorithm
+Default set to false</p>
+</dd>
+<dt>max_rank: int</dt><dd><p>Maximum rank of core that we let the rank adaptive algorithm reach
+Default set to the minimum number of Cheb points per dimension</p>
+</dd>
+<dt>max_rounds: int</dt><dd><p>Maximum number of times the rank is increased for every core without improvement
+Default set to 5</p>
+</dd>
+<dt>epsilon: float</dt><dd><p>Used when randomly generating values to extend rank of cores
+Default set to 1e-8</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.serialize">
+<code class="sig-name descname">serialize</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.serialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.serialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes the instance of class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">string</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Filename should be a string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.set_subgrid">
+<code class="sig-name descname">set_subgrid</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">subgrid_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.set_subgrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.set_subgrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method lets the user manually set subgrid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subgrid_points</strong><span class="classifier">numpy array</span></dt><dd><p>array of random cheb_pts. Note that these are not the entries representing the subgrid but the actual values.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError :</dt><dd><p>subgrid_points must be 2D numpy array</p>
+</dd>
+<dt><strong>ValueError</strong><span class="classifier">NaN check</span></dt><dd><p>subgrid_points must not contain NaN values</p>
+</dd>
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>subgrid_points must have as many columns as dimension specified for tensor (dimension is an attribute of class intance)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.set_subgrid_values">
+<code class="sig-name descname">set_subgrid_values</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.set_subgrid_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.set_subgrid_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the values corresponding the subgrid within the class instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>values</strong><span class="classifier">numpy array 1D</span></dt><dd><p>values for train and validation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">dimension of values parameter</span></dt><dd><p>values parameter should be a 1D numpy array</p>
+</dd>
+<dt>AttributeError :</dt><dd><p>subgrid_entries must already exist within the class for this method to be called</p>
+</dd>
+<dt><strong>ValueError</strong><span class="classifier">length check</span></dt><dd><p>Length of values must be the same as length of subgrid_entries</p>
+</dd>
+<dt><strong>ValueError</strong><span class="classifier">NaN check</span></dt><dd><p>Values param musst not contain NaN values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.subgrid_by_number">
+<code class="sig-name descname">subgrid_by_number</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.subgrid_by_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.subgrid_by_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly sample n grid points. This creates the subgrid used to build the Chebyshev Tensor in TT format</p>
+<p>Subgrid is randomly generated. Subgrid points may be repeated in this sampling. Repeats are removed. Therefore, user should be aware that the number of subgrid points returned may be lower than the number requested..</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>value greater than 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>subgrid_points_unique</strong><span class="classifier">numpy array</span></dt><dd><p>2  dimensional numpy array containing the subrid of the tensor for which we need values to run the rank adaptive algorithm</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Parameter n must be an integer</p>
+</dd>
+<dt>ValueError</dt><dd><p>Parameter n must be greater than 1</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.mocax_extend.MocaxExtend.subgrid_by_percent">
+<code class="sig-name descname">subgrid_by_percent</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend.html#MocaxExtend.subgrid_by_percent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend.MocaxExtend.subgrid_by_percent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly sample a subgrid of the full Chebyshev grid by specifying a percentage p. This creates the subgrid used to build the Chebyshev Tensor in TT format</p>
+<p>Subgrid is randomly generated. Subgrid points may be repeated in this sampling. Repeats are removed. Therefore, user should be aware that the number of subgrid points returned may be lower than the number requested..</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>p</strong><span class="classifier">float</span></dt><dd><p>percentage between 0 and 1.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>subgrid_points_unique</strong><span class="classifier">numpy array</span></dt><dd><p>2  dimensional numpy array containing the subrid of the tensor for which we need values to run the rank adaptive algorithm</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>Parameter p must be between zero and one</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mocaxextendpy.alt_least_squares">
+<span id="alt-least-squares-module"></span><h2>alt_least_squares module<a class="headerlink" href="#module-mocaxextendpy.alt_least_squares" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mocaxextendpy.alt_least_squares.AlternatingLeastSquares">
+<em class="property">class </em><code class="sig-prename descclassname">mocaxextendpy.alt_least_squares.</code><code class="sig-name descname">AlternatingLeastSquares</code><a class="reference internal" href="_modules/mocaxextendpy/alt_least_squares.html#AlternatingLeastSquares"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.alt_least_squares.AlternatingLeastSquares" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>class that manages the routines associated to the Alternating Least Squares scheme used by the Completion Algorithm</p>
+<dl class="method">
+<dt id="mocaxextendpy.alt_least_squares.AlternatingLeastSquares.alternating_least_squares">
+<em class="property">static </em><code class="sig-name descname">alternating_least_squares</code><span class="sig-paren">(</span><em class="sig-param">tensor_entries_train</em>, <em class="sig-param">values_train</em>, <em class="sig-param">tensor</em>, <em class="sig-param">core_idx</em>, <em class="sig-param">num_cheb_pts_ptr</em>, <em class="sig-param">sorted_entries_ptr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/alt_least_squares.html#AlternatingLeastSquares.alternating_least_squares"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.alt_least_squares.AlternatingLeastSquares.alternating_least_squares" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements alternating least squares scheme for the completion algorithm. Used to update each core of the TT tensor.</p>
+<p>For details we refer to</p>
+<p>Steinlechner, M. Riemannian optimization for high-dimensional tensor completion. SIAM J. Sci. Comput. 38.  (2016). S461–S484.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor_entries_train</strong><span class="classifier">numpy array 2D</span></dt><dd><p>Tensor subgrid entries used for training</p>
+</dd>
+<dt><strong>values_train</strong><span class="classifier">numpy array 1D</span></dt><dd><p>Values on subgrid used for training</p>
+</dd>
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>Chebyshev Tensor in TT format.</p>
+</dd>
+<dt><strong>core_idx</strong><span class="classifier">int</span></dt><dd><p>Indicates the core to be updated</p>
+</dd>
+<dt><strong>num_cheb_pts_ptr: ctype array with ints</strong></dt><dd><p>Number of chebyshev points per dimension
+Computed before calling this function to save time</p>
+</dd>
+<dt><strong>sorted_entries_ptr: dictionary of ctype array with ints</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mod_core</strong><span class="classifier">numpy array 4D</span></dt><dd><p>Core of TT tensor modified by ALS scheme</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.alt_least_squares.AlternatingLeastSquares.sort_tensor_pts">
+<code class="sig-name descname">sort_tensor_pts</code><span class="sig-paren">(</span><em class="sig-param">tensor_entries_train</em>, <em class="sig-param">values_train</em>, <em class="sig-param">core_idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/alt_least_squares.html#AlternatingLeastSquares.sort_tensor_pts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.alt_least_squares.AlternatingLeastSquares.sort_tensor_pts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Order tensor the subgrid of tensor used for training on the column corresponding to the core to update with ALS scheme. Used later for solving linear sys of equations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor_entries_train</strong><span class="classifier">numpy array 2D</span></dt><dd><p>Tensor subgrid entries used for training</p>
+</dd>
+<dt><strong>values_train</strong><span class="classifier">numpy array 1D</span></dt><dd><p>Values on subgrid used for training</p>
+</dd>
+<dt><strong>core_idx</strong><span class="classifier">int</span></dt><dd><p>Indicates the core to be updated</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>sorted_tensor_entries_train</strong><span class="classifier">numpy array 2D</span></dt><dd><p>The sorted subgrid (along column corresponding to core to updated) used for training</p>
+</dd>
+<dt><strong>sorted_values_train</strong><span class="classifier">numpy array 1D</span></dt><dd><p>Sorted values corresponding to subgrid</p>
+</dd>
+<dt><strong>idx_sort</strong><span class="classifier">int</span></dt><dd><p>Indices that give the sorting obtained</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mocaxextendpy.mocax_extend_C_interface">
+<span id="mocax-extend-c-interface-module"></span><h2>mocax_extend_C_interface module<a class="headerlink" href="#module-mocaxextendpy.mocax_extend_C_interface" title="Permalink to this headline">¶</a></h2>
+<p>The MocaxextendAlgorithm C interface for Python.</p>
+<dl class="function">
+<dt id="mocaxextendpy.mocax_extend_C_interface.hom_mat">
+<code class="sig-prename descclassname">mocaxextendpy.mocax_extend_C_interface.</code><code class="sig-name descname">hom_mat</code><span class="sig-paren">(</span><em class="sig-param">indices_array</em>, <em class="sig-param">num_indices</em>, <em class="sig-param">ranks_array</em>, <em class="sig-param">num_cheb_pts_array</em>, <em class="sig-param">dim</em>, <em class="sig-param">core_idx</em>, <em class="sig-param">cores_array</em>, <em class="sig-param">results_array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend_C_interface.html#hom_mat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend_C_interface.hom_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling so file of hom_mat c file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mocaxextendpy.mocax_extend_C_interface.tensor_vals">
+<code class="sig-prename descclassname">mocaxextendpy.mocax_extend_C_interface.</code><code class="sig-name descname">tensor_vals</code><span class="sig-paren">(</span><em class="sig-param">indices_array</em>, <em class="sig-param">num_indices</em>, <em class="sig-param">ranks_array</em>, <em class="sig-param">num_cheb_pts_array</em>, <em class="sig-param">dim</em>, <em class="sig-param">cores_array</em>, <em class="sig-param">results_array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/mocax_extend_C_interface.html#tensor_vals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.mocax_extend_C_interface.tensor_vals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling so file of tensor_vals c file</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mocaxextendpy.tt_cheb_utils">
+<span id="tt-cheb-utils-module"></span><h2>tt_cheb_utils module<a class="headerlink" href="#module-mocaxextendpy.tt_cheb_utils" title="Permalink to this headline">¶</a></h2>
+<p>script defines class TTChebyshevUtils</p>
+<dl class="class">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils">
+<em class="property">class </em><code class="sig-prename descclassname">mocaxextendpy.tt_cheb_utils.</code><code class="sig-name descname">TTChebyshevUtils</code><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that manages many of the functions used in training and evalution of Chebyhev Tensors in TT format.</p>
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.c_tensor">
+<em class="property">static </em><code class="sig-name descname">c_tensor</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">num_cheb_pts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.c_tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.c_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>This method builds the tensor of Chebyshev coefficients needed in the evaluation of the Chebyshev tensors in TT format. It is one of the two tensors in TT format needed for the inner product that implements evaluation of Chebyshev tensors in TT format.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>tensor in TT format.</p>
+</dd>
+<dt><strong>num_cheb_pts</strong><span class="classifier">list of ints</span></dt><dd><p>Number of Chebyshev points in each dimension</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>c_tensor</strong><span class="classifier">TT</span></dt><dd><p>Chebyshev coefficients needed for evaluation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>The tensor is not a tensor in TT format.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.domain_scaler">
+<em class="property">static </em><code class="sig-name descname">domain_scaler</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">pt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.domain_scaler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.domain_scaler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes pt within inteval [a, b] and scales it to interval [-1,1]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a</strong><span class="classifier">float</span></dt><dd><p>Determines starting point of interval [a, b]</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">float</span></dt><dd><p>Determines end point of interval [a, b]</p>
+</dd>
+<dt><strong>pt</strong><span class="classifier">float</span></dt><dd><p>pt to scale</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>val</strong><span class="classifier">float</span></dt><dd><p>scaled point</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError :</dt><dd><p>The pt should be greater than a and less than b
+The value a should be less than value b.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.gen_cheb_tensor">
+<em class="property">static </em><code class="sig-name descname">gen_cheb_tensor</code><span class="sig-paren">(</span><em class="sig-param">pt</em>, <em class="sig-param">dim</em>, <em class="sig-param">num_cheb_pts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.gen_cheb_tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.gen_cheb_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method genrates the rank TT tensor obtained by evaluating Chebyshev polynomials on the point to be evaluated by a Chebyshev tensor in TT format. It is one of the two tensors in TT format needed for the inner product that implements evaluation of Chebyshev tensors in TT format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pt</strong><span class="classifier">numpy array 1D</span></dt><dd><p>point to be evaluated by Chebyshev Tensor in TT format</p>
+</dd>
+<dt><strong>dim</strong><span class="classifier">int</span></dt><dd><p>Dimension of tensor</p>
+</dd>
+<dt><strong>num_cheb_pts</strong><span class="classifier">list</span></dt><dd><p>List with number of chebyshev points per dimension</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>Chebyshev Tensor in TT format</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>pt must have the same number of entries as dimension of tensor
+there must be as many entries in num_cheb_pts as dimension of tensor</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orth_left">
+<em class="property">static </em><code class="sig-name descname">orth_left</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">position</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.orth_left"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orth_left" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orthogonalizes the full tensor.till position starting from the left.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>Tensor to be orthogonlized</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">int</span></dt><dd><p>Core to which we do the orthogonlization
+Should be between 0 and dimension - 1 (inclusive)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>TT tensor that has been orthogonalized</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>Position should be either 0 or more and less than or equal to dimension -1</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Parameter position must be an integer.
+tensor should be of TT type</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orth_right">
+<em class="property">static </em><code class="sig-name descname">orth_right</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">position</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.orth_right"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orth_right" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orthogonalizes the full tensor.till position starting from the right.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>Tensor to be orthogonlized</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">int</span></dt><dd><p>Core to which we do the orthogonlization
+Should be between 0 and dimension - 1 (inclusive)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>TT tensor that has been orthogonalized</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>Position should be either 0 or more and less than or equal to dimension -1</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Parameter position must be an integer.
+tensor should be of TT type</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orthogonalize">
+<em class="property">static </em><code class="sig-name descname">orthogonalize</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">position</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.orthogonalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.orthogonalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orthogonolizes a tensor in TT format at the core indicated by position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">TT</span></dt><dd><p>tensor to be orthogonlized</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">int</span></dt><dd><p>Core to which we do the orthogonlization
+Should be between 0 and dimension - 1 (inclusive)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tt_tensor</strong><span class="classifier">TT</span></dt><dd><p>TT tensor that has been orthogonalized</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>Position should be either 0 or more and less than or equal to dimension -1</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>Parameter position must be an integer.
+tensor should be of TT type</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.tt_tensor_inner_prod">
+<em class="property">static </em><code class="sig-name descname">tt_tensor_inner_prod</code><span class="sig-paren">(</span><em class="sig-param">tensor_1</em>, <em class="sig-param">tensor_2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/tt_cheb_utils.html#TTChebyshevUtils.tt_tensor_inner_prod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.tt_cheb_utils.TTChebyshevUtils.tt_tensor_inner_prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method implements the inner product of two tensors in TT format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor_1</strong><span class="classifier">TT</span></dt><dd><p>tensor in TT format.</p>
+</dd>
+<dt><strong>tensor_2</strong><span class="classifier">TT</span></dt><dd><p>tensor in TT format.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>res</strong><span class="classifier">numpy array</span></dt><dd><p>It returns res.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>The dimension of tensor_1 must be the same as the dimension of tensor_2 .</p>
+</dd>
+<dt><strong>TypeError</strong><span class="classifier">type mismatch</span></dt><dd><p>tensor_1 and tensor_2 must be of type TT tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mocaxextendpy.cheb_utils">
+<span id="cheb-utils-module"></span><h2>cheb_utils module<a class="headerlink" href="#module-mocaxextendpy.cheb_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mocaxextendpy.cheb_utils.cheb_points">
+<code class="sig-prename descclassname">mocaxextendpy.cheb_utils.</code><code class="sig-name descname">cheb_points</code><span class="sig-paren">(</span><em class="sig-param">num_pts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/cheb_utils.html#cheb_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.cheb_utils.cheb_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if number is not greater than one return error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>num_pts</strong><span class="classifier">int</span></dt><dd><p>it must be greater than 1.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>value</strong><span class="classifier">val</span></dt><dd><p>It returns a value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">size mismatch</span></dt><dd><p>Number of Chebyshev points passed, must be greater than 1</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mocaxextendpy.cheb_utils.cheb_pts_interval">
+<code class="sig-prename descclassname">mocaxextendpy.cheb_utils.</code><code class="sig-name descname">cheb_pts_interval</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/cheb_utils.html#cheb_pts_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.cheb_utils.cheb_pts_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if entry a in interval is less than entry b in interval, else return error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Number of cheb points to generate.</p>
+</dd>
+<dt><strong>a</strong><span class="classifier">int</span></dt><dd><p>Lower end of interval [a, b]</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">int</span></dt><dd><p>Upper end of interval [a,b]</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cheb_anchor_pts</strong><span class="classifier">int</span></dt><dd><p>It returns anchor points.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError :</dt><dd><p>Interval boundary point a must be a less than boundary pointinterval b.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mocaxextendpy.cheb_utils.parametrisation">
+<code class="sig-prename descclassname">mocaxextendpy.cheb_utils.</code><code class="sig-name descname">parametrisation</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mocaxextendpy/cheb_utils.html#parametrisation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mocaxextendpy.cheb_utils.parametrisation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parametrisation used to linearly transform interval [0,1] to [a,b].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a</strong><span class="classifier">int</span></dt><dd><p>Range interval value a (a, b)</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">int</span></dt><dd><p>Range interval value b (a, b)</p>
+</dd>
+<dt><strong>t</strong><span class="classifier">int</span></dt><dd><p>it must be greater than 1.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>value</strong><span class="classifier">val</span></dt><dd><p>It returns a value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ValueError</strong><span class="classifier">interval</span></dt><dd><p>Parameter t must be greater zero and less than one</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="readme.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="mocaxextendpy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021 iRuiz Technologies, ltd..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

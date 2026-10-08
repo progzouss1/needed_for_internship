@@ -1,0 +1,57 @@
+API reference
+=============
+
+
+mocax_extend module
+-------------------
+
+.. automodule:: mocax_extend
+   :members:
+   :undoc-members:
+   :exclude-members: dimension,num_cheb_pts,intervals,cheb_pts_per_dimension,subgrid_entries,subgrid_entries_train,subgrid_entries_val,subgrid_vals,subgrid_vals_train,subgrid_vals_val,sorted_entries_train_ptrs,num_cheb_pts_ptr,trained_tt_tensor
+   :show-inheritance:
+
+
+alt_least_squares module
+------------------------
+
+.. automodule:: alt_least_squares
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
+mocax_extend_C_interface module
+------------------------------------
+
+.. automodule:: mocax_extend_C_interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+tt_cheb_utils module
+-------------------------------
+
+.. automodule:: tt_cheb_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+cheb_utils module
+--------------------------
+
+.. automodule:: cheb_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
+
+
+
+
+

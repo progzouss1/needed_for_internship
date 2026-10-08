@@ -1,0 +1,23 @@
+@import 'theme.css';
+
+.pre{
+    color: #FF007F;
+
+}
+
+.sig-param .n .pre{
+    color: #000000;
+
+}
+
+.sig-paren{
+    color: #000000;
+
+}
+
+strong{
+    font-size:20px;
+}
+
+
+
